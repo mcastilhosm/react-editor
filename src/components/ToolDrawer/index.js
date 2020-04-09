@@ -7,7 +7,7 @@ import GetAppIcon from '@material-ui/icons/GetApp';
 
 import { ToolList } from './styles';
 
-export default function ToolDrwer({
+export default function ToolDrawer({
   addText,
   deleteElement,
   saveCanvasToPng,
