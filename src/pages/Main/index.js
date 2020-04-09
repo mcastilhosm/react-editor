@@ -11,20 +11,18 @@ import {
   FormControlLabel,
   Checkbox
 } from '@material-ui/core';
-import DeleteIcon from '@material-ui/icons/Delete';
-import TitleIcon from '@material-ui/icons/Title';
-import ImageIcon from '@material-ui/icons/Image';
-import GetAppIcon from '@material-ui/icons/GetApp';
 
-import { Container, Body, ToolList, ContentDrawer, Drawer } from './styles';
+import { Container, Body, ContentDrawer, Drawer } from './styles';
 
 import Header from '../../components/Header';
+import ToolDrawer from '../../components/ToolDrawer';
 
-function Editor() {
+export default function Index() {
   const canvasRef = useRef(null);
   const [canvas, setCanvas] = useState(null);
-  const [errorOpenUrlFromImg, setErrorOpenUrlFromImg] = useState(false);
-  const [openModalUrl, setOpenModalUrl] = React.useState(false);
+  const [openError, setOpenError] = useState(false);
+  const [messageError, setMessageError] = useState('');
+  const [openModalUrl, setOpenModalUrl] = useState(false);
   const [url, setUrl] = useState('');
   const dimensionsCanvas = useMemo(() => {
     return {
@@ -32,7 +30,7 @@ function Editor() {
       h: window.innerHeight - 160
     };
   }, []);
-  const [clearCanvas, setClearCanvas] = React.useState(false);
+  const [clearCanvas, setClearCanvas] = useState(false);
 
   useEffect(() => {
     if (!canvas) {
@@ -53,17 +51,16 @@ function Editor() {
     const iText = new fabric.IText('Novo Texto', {
       left: between(1, canvas.getWidth() / 2),
       top: between(1, canvas.getHeight() / 2),
-      fontFamily: 'Helvetica',
+      fontFamily: 'Roboto',
       fontWeight: 400,
       fontSize: 18
     });
+
     canvas.add(iText).setActiveObject(iText);
   }
 
   function handleDeleteElement() {
-    canvas.getActiveObjects().forEach(obj => {
-      canvas.remove(obj);
-    });
+    canvas.getActiveObjects().forEach(obj => canvas.remove(obj));
   }
 
   function handleSaveCanvasToPng() {
@@ -80,6 +77,8 @@ function Editor() {
   }
 
   function handleLoadImgFromUrl(url) {
+    if (!url) return;
+
     fabric.Image.fromURL(
       url,
       img => {
@@ -101,7 +100,8 @@ function Editor() {
           setOpenModalUrl(false);
           setUrl('');
         } else {
-          setErrorOpenUrlFromImg(true);
+          setOpenError(true);
+          setMessageError('Não foi possível carregar a imagem');
         }
       },
       { crossOrigin: 'anonymous' }
@@ -117,38 +117,12 @@ function Editor() {
       <Header />
 
       <Body>
-        <ToolList>
-          <Button
-            variant="outlined"
-            onClick={handleAddText}
-            endIcon={<TitleIcon />}
-          >
-            Add Text
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={handleDeleteElement}
-            color="secondary"
-            endIcon={<DeleteIcon />}
-          >
-            Delete
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={handleSaveCanvasToPng}
-            color="primary"
-            endIcon={<GetAppIcon />}
-          >
-            Save
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={() => setOpenModalUrl(true)}
-            endIcon={<ImageIcon />}
-          >
-            Load Image(URL)
-          </Button>
-        </ToolList>
+        <ToolDrawer
+          addText={handleAddText}
+          deleteElement={handleDeleteElement}
+          saveCanvasToPng={handleSaveCanvasToPng}
+          setOpenModalUrl={() => setOpenModalUrl(true)}
+        />
         <ContentDrawer>
           <Drawer ref={canvasRef} />
         </ContentDrawer>
@@ -197,17 +171,18 @@ function Editor() {
       </Dialog>
 
       <Snackbar
-        open={errorOpenUrlFromImg}
+        open={openError}
         autoHideDuration={3000}
         anchorOrigin={{
           vertical: 'bottom',
           horizontal: 'center'
         }}
-        onClose={() => setErrorOpenUrlFromImg(false)}
-        message="Não foi possível carregar a imagem"
+        onClose={() => {
+          setOpenError(false);
+          setMessageError('');
+        }}
+        message={messageError}
       />
     </Container>
   );
 }
-
-export default Editor;
